@@ -6,6 +6,7 @@ import org.acme.entities.Client;
 import org.acme.repository.ClientRepository;
 
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -25,34 +26,48 @@ public class ClientEndpoint {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Client> hello() {
-        return clientRepository.getClients();
+        return clientRepository.listAll();
     }
 
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Client getClientById(@PathParam("id") Long id) {
-        return clientRepository.getClientById(id);
+        return clientRepository.findById(id);
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
     public Client addClient(Client client) {
-        return clientRepository.addClient(client);
+        clientRepository.persist(client);
+        return client;
     }
 
     @PUT
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
     public void updateClient(@PathParam("id") Long id, Client updatedClient) {
-        clientRepository.updateClient(id, updatedClient);
+        Client existingClient = clientRepository.findById(id);
+        if (existingClient != null) {
+            existingClient.firstName = updatedClient.firstName;
+            existingClient.lastName = updatedClient.lastName;
+            existingClient.companyName = updatedClient.companyName;
+            clientRepository.persist(existingClient);
+        }
+
     }
 
     @DELETE
     @Path("/{id}")
+    @Transactional
     public void deleteClient(@PathParam("id") Long id) {
-        clientRepository.deleteClient(id);
+        Client client = clientRepository.findById(id);
+        if (client != null) {
+            clientRepository.delete(client);
+        }
     }
 }
