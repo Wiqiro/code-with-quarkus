@@ -3,7 +3,7 @@ package org.acme.endpoints;
 import java.util.List;
 
 import org.acme.entities.Client;
-import org.acme.repository.ClientRepository;
+import org.acme.services.ClientService;
 
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -21,19 +21,19 @@ import jakarta.ws.rs.core.MediaType;
 public class ClientEndpoint {
 
     @Inject
-    ClientRepository clientRepository;
+    ClientService clientService;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Client> hello() {
-        return clientRepository.listAll();
+    public List<Client> getClients() {
+        return clientService.getAllClients();
     }
 
     @GET
     @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Client getClientById(@PathParam("id") Long id) {
-        return clientRepository.findById(id);
+        return clientService.getClientById(id);
     }
 
     @POST
@@ -41,8 +41,7 @@ public class ClientEndpoint {
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
     public Client addClient(Client client) {
-        clientRepository.persist(client);
-        return client;
+        return clientService.addClient(client);
     }
 
     @PUT
@@ -51,23 +50,13 @@ public class ClientEndpoint {
     @Consumes(MediaType.APPLICATION_JSON)
     @Transactional
     public void updateClient(@PathParam("id") Long id, Client updatedClient) {
-        Client existingClient = clientRepository.findById(id);
-        if (existingClient != null) {
-            existingClient.firstName = updatedClient.firstName;
-            existingClient.lastName = updatedClient.lastName;
-            existingClient.companyName = updatedClient.companyName;
-            clientRepository.persist(existingClient);
-        }
-
+        clientService.updateClient(id, updatedClient);
     }
 
     @DELETE
     @Path("/{id}")
     @Transactional
     public void deleteClient(@PathParam("id") Long id) {
-        Client client = clientRepository.findById(id);
-        if (client != null) {
-            clientRepository.delete(client);
-        }
+        clientService.deleteClient(id);
     }
 }
